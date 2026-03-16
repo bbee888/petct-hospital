@@ -11,6 +11,7 @@
         <el-table-column prop="id" label="ID" width="80" />
         <el-table-column prop="name" label="栏目名称" />
         <el-table-column prop="slug" label="栏目别名" />
+        <el-table-column prop="site_domain" label="所属站点" width="150" />
         <el-table-column label="操作" width="200" fixed="right">
           <template #default="scope">
             <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
@@ -42,7 +43,8 @@ const dialogTitle = ref('新增栏目')
 const form = ref({
   id: '',
   name: '',
-  slug: ''
+  slug: '',
+  site_domain: ''
 })
 
 const fetchCategories = async () => {
@@ -60,7 +62,8 @@ const handleAdd = () => {
   form.value = {
     id: '',
     name: '',
-    slug: ''
+    slug: '',
+    site_domain: ''
   }
   dialogVisible.value = true
 }

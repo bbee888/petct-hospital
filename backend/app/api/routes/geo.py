@@ -31,12 +31,11 @@ class ProvinceTreeNode(BaseModel):
     children: List[CityTreeNode] = []
 
 # 省份相关路由
-@router.get("/provinces", response_model=list[ProvinceSchema])
+@router.get("/provinces", response_model=List[ProvinceSchema])
 async def get_provinces(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(Province).order_by(Province.sort, Province.id))
+    result = await db.execute(select(Province).order_by(Province.id))
     provinces = result.scalars().all()
     return provinces
 
@@ -55,8 +54,7 @@ async def create_province(
 @router.get("/provinces/{province_id}", response_model=ProvinceSchema)
 async def get_province(
     province_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(select(Province).where(Province.id == province_id))
     province = result.scalars().first()
@@ -118,11 +116,10 @@ async def delete_province(
     return {"message": "Province deleted successfully"}
 
 # 城市相关路由
-@router.get("/cities", response_model=list[CitySchema])
+@router.get("/cities", response_model=List[CitySchema])
 async def get_cities(
     province_id: int = None,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    db: AsyncSession = Depends(get_db)
 ):
     query = select(City)
     if province_id:
@@ -156,8 +153,7 @@ async def create_city(
 @router.get("/cities/{city_id}", response_model=CitySchema)
 async def get_city(
     city_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(select(City).where(City.id == city_id))
     city = result.scalars().first()
@@ -229,11 +225,10 @@ async def delete_city(
     return {"message": "City deleted successfully"}
 
 # 区县相关路由
-@router.get("/districts", response_model=list[DistrictSchema])
+@router.get("/districts", response_model=List[DistrictSchema])
 async def get_districts(
     city_id: int = None,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    db: AsyncSession = Depends(get_db)
 ):
     query = select(District)
     if city_id:
@@ -267,8 +262,7 @@ async def create_district(
 @router.get("/districts/{district_id}", response_model=DistrictSchema)
 async def get_district(
     district_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(select(District).where(District.id == district_id))
     district = result.scalars().first()
@@ -331,15 +325,14 @@ async def delete_district(
     return {"message": "District deleted successfully"}
 
 # 树形结构数据接口
-@router.get("/tree", response_model=list[ProvinceTreeNode])
+@router.get("/tree", response_model=List[ProvinceTreeNode])
 async def get_geo_tree(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(
         select(Province).options(
             selectinload(Province.cities).selectinload(City.districts)
-        ).order_by(Province.sort, Province.id)
+        ).order_by(Province.id)
     )
     provinces = result.scalars().unique().all()
     
@@ -348,7 +341,6 @@ async def get_geo_tree(
         province_node = ProvinceTreeNode(
             id=province.id,
             name=province.name,
-            sort=province.sort,
             type="province",
             children=[]
         )

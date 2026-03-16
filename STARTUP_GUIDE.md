@@ -9,7 +9,7 @@
 - MySQL 8.0+
 - 数据库名称：`petct_manage_db`
 - 数据库用户名：`root`
-- 数据库密码：`root`
+- 数据库密码：`123456`
 
 ## 后端启动
 
@@ -22,7 +22,7 @@ pip install -r requirements.txt
 ### 2. 配置数据库
 数据库连接已配置在 `backend/.env` 文件中：
 ```
-DATABASE_URL=mysql+aiomysql://root:root@localhost:3306/petct_manage_db
+DATABASE_URL=mysql+aiomysql://root:123456@localhost:3306/petct_manage_db
 ```
 
 ### 3. 初始化数据库

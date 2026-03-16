@@ -2,8 +2,11 @@ import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import router from '../router'
 
+// 从环境变量获取API地址
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8001'
+
 const request = axios.create({
-  baseURL: 'http://127.0.0.1:8001/api',
+  baseURL: `${API_BASE_URL}/api`,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json'
@@ -12,7 +15,7 @@ const request = axios.create({
 
 // 创建一个专门用于登录的请求实例，使用表单格式
 export const loginRequest = axios.create({
-  baseURL: 'http://127.0.0.1:8001/api',
+  baseURL: `${API_BASE_URL}/api`,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/x-www-form-urlencoded'

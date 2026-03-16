@@ -4,7 +4,7 @@ import mysql.connector
 conn = mysql.connector.connect(
     host="localhost",
     user="root",
-    password="root",
+    password="123456",
     database="petct_manage_db"
 )
 

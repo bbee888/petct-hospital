@@ -2,6 +2,7 @@ fastapi
 uvicorn[standard]
 sqlalchemy
 pymysql
+aiomysql
 cryptography
 pydantic
 pydantic-settings
@@ -15,3 +16,5 @@ fakeredis
 reportlab
 pandas
 numpy
+python-slugify
+greenlet

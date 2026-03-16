@@ -13,7 +13,7 @@
 确保MySQL已启动并创建了数据库：
 - 数据库名：petct_manage_db
 - 用户名：root
-- 密码：root
+- 密码：123456
 
 ### 后端启动
 
@@ -56,7 +56,19 @@ cd frontend
 npm install
 ```
 
-3. 启动前端开发服务器：
+3. 配置环境变量(可选):
+```bash
+# 开发环境配置已默认设置,如需修改后端地址请编辑:
+# frontend/.env.development
+```
+
+环境变量说明:
+- `VITE_API_BASE_URL`: 后端API地址(不含/api路径),默认 `http://localhost:8001`
+- `VITE_APP_PORT`: 前端应用端口,默认 `8080`
+
+详细配置说明请参考: [frontend/ENV_CONFIG.md](frontend/ENV_CONFIG.md)
+
+4. 启动前端开发服务器：
 ```bash
 npm run dev
 ```

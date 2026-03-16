@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List
 from app.db.session import get_db
 from app.api.deps import get_current_active_user
 from app.models.user import User
@@ -9,7 +10,7 @@ from app.schemas.site import SiteCreate, SiteUpdate, Site as SiteSchema
 
 router = APIRouter()
 
-@router.get("/", response_model=list[SiteSchema])
+@router.get("/", response_model=List[SiteSchema])
 async def get_sites(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)

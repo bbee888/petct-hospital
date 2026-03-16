@@ -1,25 +1,26 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy import select
+from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List, Optional
 from app.db.session import get_db
 from app.api.deps import get_current_active_user
 from app.models.user import User
 from app.models.article import Article, ArticleCategory
 from app.schemas.article import ArticleCreate, ArticleUpdate, Article as ArticleSchema, ArticleCategoryCreate, ArticleCategoryUpdate, ArticleCategory as ArticleCategorySchema
-from app.services.tag_service import process_tags
 
 router = APIRouter()
 
 # 文章分类相关路由
-@router.get("/categories", response_model=list[ArticleCategorySchema])
+@router.get("/categories", response_model=List[ArticleCategorySchema])
 async def get_article_categories(
     request: Request,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     # domain = request.state.domain
-    result = await db.execute(select(ArticleCategory))
-    categories = result.scalars().all()
+    result = await db.execute(select(ArticleCategory).options(joinedload(ArticleCategory.articles)))
+    categories = result.scalars().unique().all()
     return categories
 
 @router.post("/categories", response_model=ArticleCategorySchema)
@@ -30,12 +31,16 @@ async def create_article_category(
     current_user: User = Depends(get_current_active_user)
 ):
     # domain = request.state.domain
-    
+
+    # 调试：打印接收到的数据
+    print(f"接收到的文章分类数据: {category.model_dump()}")
+    print(f"site_domain 值: {category.site_domain}")
+
     # 创建分类
     db_category = ArticleCategory(
-        **category.model_dump(),
-        site_domain="localhost"
+        **category.model_dump()
     )
+    print(f"创建的 db_category.site_domain: {db_category.site_domain}")
     db.add(db_category)
     await db.commit()
     await db.refresh(db_category)
@@ -122,14 +127,28 @@ async def delete_article_category(
     return {"message": "Category deleted successfully"}
 
 # 文章相关路由
-@router.get("/", response_model=list[ArticleSchema])
+@router.get("/", response_model=List[ArticleSchema])
 async def get_articles(
     request: Request,
+    title: Optional[str] = None,
+    site_domain: Optional[str] = None,
+    category_id: Optional[int] = None,
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     # domain = request.state.domain
-    result = await db.execute(select(Article))
+    query = select(Article)
+
+    # 添加搜索条件
+    if title:
+        query = query.where(Article.title.contains(title))
+    if site_domain:
+        # 通过 category 关联查询 site_domain
+        query = query.join(ArticleCategory).where(ArticleCategory.site_domain == site_domain)
+    if category_id:
+        query = query.where(Article.category_id == category_id)
+
+    result = await db.execute(query)
     articles = result.scalars().all()
     return articles
 
@@ -141,7 +160,7 @@ async def create_article(
     current_user: User = Depends(get_current_active_user)
 ):
     # domain = request.state.domain
-    
+
     # 验证分类是否存在
     result = await db.execute(
         select(ArticleCategory).where(ArticleCategory.id == article.category_id)
@@ -152,20 +171,19 @@ async def create_article(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Category not found"
         )
-    
-    # 创建文章
+
+    # 调试：打印接收到的数据
+    print(f"接收到的文章数据: {article.model_dump()}")
+
+    # 创建文章 (site_domain 将从关联的 category 获取)
     db_article = Article(
-        **article.model_dump(exclude={"tags"}),
-        site_domain="localhost"
+        **article.model_dump()
     )
+    print(f"创建的文章, 所属栏目 site_domain: {category.site_domain}")
     db.add(db_article)
     await db.commit()
     await db.refresh(db_article)
-    
-    # 处理标签
-    if article.tags:
-        await process_tags(db, "article", db_article.id, article.tags)
-    
+
     return db_article
 
 @router.get("/{article_id}", response_model=ArticleSchema)
@@ -177,7 +195,7 @@ async def get_article(
 ):
     # domain = request.state.domain
     result = await db.execute(
-        select(Article).where(Article.id == article_id)
+        select(Article).options(joinedload(Article.category)).where(Article.id == article_id)
     )
     article = result.scalars().first()
     if not article:
@@ -219,16 +237,12 @@ async def update_article(
             )
     
     # 更新文章
-    for field, value in article.model_dump(exclude_unset=True, exclude={"tags"}).items():
+    for field, value in article.model_dump(exclude_unset=True).items():
         setattr(db_article, field, value)
-    
+
     await db.commit()
     await db.refresh(db_article)
-    
-    # 处理标签
-    if article.tags is not None:
-        await process_tags(db, "article", db_article.id, article.tags)
-    
+
     return db_article
 
 @router.delete("/{article_id}")

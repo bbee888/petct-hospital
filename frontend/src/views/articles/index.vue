@@ -3,7 +3,7 @@
     <el-card shadow="hover">
       <template #header>
         <div class="card-header">
-          <span>文章管理</span>
+          <div class="font-bold text-xl">文章管理</div>
           <el-button type="primary" @click="handleAdd">新增文章</el-button>
         </div>
       </template>
@@ -11,16 +11,58 @@
         <el-input
           v-model="searchQuery"
           placeholder="搜索文章标题"
-          prefix-icon="el-icon-search"
-          style="width: 300px"
+          prefix-icon="Search"
+          style="width: 200px"
           @keyup.enter="fetchArticles"
         />
+        <el-select
+          v-model="searchSiteDomain"
+          placeholder="选择站点"
+          clearable
+          style="width: 150px"
+          @change="handleSiteChange"
+        >
+          <el-option
+            v-for="site in sites"
+            :key="site.domain"
+            :label="site.name"
+            :value="site.domain"
+          />
+        </el-select>
+        <el-select
+          v-model="searchCategoryId"
+          placeholder="选择栏目"
+          clearable
+          style="width: 150px"
+          :disabled="!searchSiteDomain"
+        >
+          <el-option
+            v-for="category in filteredCategories"
+            :key="category.id"
+            :label="category.name"
+            :value="category.id"
+          />
+        </el-select>
         <el-button type="primary" @click="fetchArticles">搜索</el-button>
+        <el-button @click="resetSearch">重置</el-button>
       </div>
       <el-table :data="articles" style="width: 100%">
         <el-table-column prop="id" label="ID" width="80" />
+        <!-- <el-table-column label="缩略图" width="100">
+          <template #default="scope">
+            <el-image
+              v-if="scope.row.cover"
+              :src="scope.row.cover"
+              :preview-src-list="[scope.row.cover]"
+              fit="cover"
+              style="width: 60px; height: 60px; border-radius: 4px;"
+            />
+            <span v-else style="color: #909399;">无</span>
+          </template>
+        </el-table-column> -->
         <el-table-column prop="title" label="标题" />
         <el-table-column prop="site_domain" label="所属站点" width="150" />
+        <el-table-column prop="category_name" label="栏目" width="150" />
         <el-table-column prop="status" label="状态" width="100">
           <template #default="scope">
             <el-switch v-model="scope.row.status" @change="handleStatusChange(scope.row)" />
@@ -58,7 +100,8 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
+import { Search } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import request from '../../utils/request'
 import ArticleForm from './components/ArticleForm.vue'
@@ -68,6 +111,11 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
 const searchQuery = ref('')
+const searchSiteDomain = ref('')
+const searchCategoryId = ref('')
+const sites = ref([])
+const categories = ref([])
+const filteredCategories = ref([])
 const dialogVisible = ref(false)
 const dialogTitle = ref('新增文章')
 const form = ref({
@@ -75,14 +123,27 @@ const form = ref({
   title: '',
   content: '',
   category_id: '',
-  site_domain: '',
-  status: true,
-  tags: ''
+  is_published: true,
+  cover: '',
+  tags: '',
+  description: ''
 })
 
 const fetchArticles = async () => {
   try {
-    const response = await request.get('/v1/articles/')
+    // 构建查询参数
+    const params = {}
+    if (searchQuery.value) {
+      params.title = searchQuery.value
+    }
+    if (searchSiteDomain.value) {
+      params.site_domain = searchSiteDomain.value
+    }
+    if (searchCategoryId.value) {
+      params.category_id = searchCategoryId.value
+    }
+
+    const response = await request.get('/v1/articles/', { params })
     articles.value = response.data || []
     total.value = articles.value.length
   } catch (error) {
@@ -91,18 +152,70 @@ const fetchArticles = async () => {
   }
 }
 
+// 获取站点列表
+const fetchSites = async () => {
+  try {
+    const response = await request.get('/v1/sites/')
+    sites.value = response.data || []
+  } catch (error) {
+    console.error('获取站点列表失败:', error)
+  }
+}
+
+// 获取栏目列表
+const fetchCategories = async () => {
+  try {
+    const response = await request.get('/v1/articles/categories')
+    categories.value = response.data || []
+    filterCategories()
+  } catch (error) {
+    console.error('获取栏目列表失败:', error)
+  }
+}
+
+// 根据站点过滤栏目
+const filterCategories = () => {
+  if (searchSiteDomain.value) {
+    filteredCategories.value = categories.value.filter(
+      category => category.site_domain === searchSiteDomain.value
+    )
+  } else {
+    filteredCategories.value = []
+  }
+}
+
+// 站点变化处理
+const handleSiteChange = () => {
+  searchCategoryId.value = ''
+  filterCategories()
+}
+
+// 重置搜索
+const resetSearch = () => {
+  searchQuery.value = ''
+  searchSiteDomain.value = ''
+  searchCategoryId.value = ''
+  filteredCategories.value = []
+  fetchArticles()
+}
+
 const handleAdd = () => {
   dialogTitle.value = '新增文章'
-  form.value = {
-    id: '',
-    title: '',
-    content: '',
-    category_id: '',
-    site_domain: '',
-    status: true,
-    tags: ''
-  }
-  dialogVisible.value = true
+  // 先关闭对话框，然后重置表单，再打开对话框
+  dialogVisible.value = false
+  nextTick(() => {
+    form.value = {
+      id: '',
+      title: '',
+      content: '',
+      category_id: null,
+      is_published: true,
+      cover: '',
+      seo_keywords: '',
+      seo_description: ''
+    }
+    dialogVisible.value = true
+  })
 }
 
 const handleEdit = (row) => {
@@ -168,13 +281,15 @@ const handleCurrentChange = (current) => {
 }
 
 onMounted(() => {
+  fetchSites()
+  fetchCategories()
   fetchArticles()
 })
 </script>
 
 <style scoped>
 .article-list {
-  padding: 20px;
+  padding: 10px;
 }
 
 .card-header {

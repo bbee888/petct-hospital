@@ -11,6 +11,16 @@
       <el-form-item label="栏目别名" prop="slug">
         <el-input v-model="form.slug" placeholder="请输入栏目别名（用于URL）" />
       </el-form-item>
+      <el-form-item label="所属站点" prop="site_domain">
+        <el-select v-model="form.site_domain" placeholder="请选择所属网站" style="width: 100%">
+          <el-option
+            v-for="site in sites"
+            :key="site.id"
+            :label="site.name"
+            :value="site.domain"
+          />
+        </el-select>
+      </el-form-item>
     </el-form>
     <template #footer>
       <span class="dialog-footer">
@@ -22,7 +32,8 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
+import request from '../../../utils/request'
 
 const props = defineProps({
   visible: {
@@ -38,7 +49,8 @@ const props = defineProps({
     default: () => ({
       id: '',
       name: '',
-      slug: ''
+      slug: '',
+      site_domain: ''
     })
   }
 })
@@ -49,6 +61,7 @@ const formRef = ref(null)
 const dialogVisible = ref(props.visible)
 const dialogTitle = ref(props.title)
 const form = ref({ ...props.formData })
+const sites = ref([])
 
 const rules = {
   name: [
@@ -59,8 +72,26 @@ const rules = {
     { required: true, message: '请输入栏目别名', trigger: 'blur' },
     { min: 2, max: 50, message: '栏目别名长度在 2 到 50 个字符', trigger: 'blur' },
     { pattern: /^[a-z0-9-]+$/, message: '栏目别名只能包含小写字母、数字和连字符', trigger: 'blur' }
+  ],
+  site_domain: [
+    { required: true, message: '请选择所属网站', trigger: 'change' }
   ]
 }
+
+// 获取站点列表
+const fetchSites = async () => {
+  try {
+    const response = await request.get('/v1/sites/')
+    sites.value = response.data || []
+  } catch (error) {
+    console.error('获取站点列表失败:', error)
+  }
+}
+
+// 组件挂载时获取站点列表
+onMounted(() => {
+  fetchSites()
+})
 
 watch(() => props.visible, (newVal) => {
   dialogVisible.value = newVal
@@ -88,9 +119,11 @@ const handleCancel = () => {
 
 const handleSave = async () => {
   if (!formRef.value) return
-  
+
   try {
     await formRef.value.validate()
+    console.log('准备保存的表单数据:', form.value)
+    console.log('site_domain 值:', form.value.site_domain)
     emit('save', { ...form.value })
     dialogVisible.value = false
     emit('update:visible', false)

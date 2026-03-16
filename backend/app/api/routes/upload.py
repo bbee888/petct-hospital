@@ -8,16 +8,17 @@ import uuid
 
 router = APIRouter()
 
-UPLOAD_DIR = "uploads"
+# 使用绝对路径 - uploads目录在项目根目录
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 if not os.path.exists(UPLOAD_DIR):
     os.makedirs(UPLOAD_DIR)
 
 
-@router.post("/")
+@router.post("/image")
 async def upload_file(
     file: UploadFile = File(...),
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    db: AsyncSession = Depends(get_db)
 ):
     try:
         # 生成唯一文件名
@@ -33,7 +34,7 @@ async def upload_file(
         # 返回文件URL
         file_url = f"/uploads/{unique_filename}"
         return {
-            "errno": 0,
+            "code": 200,
             "data": {
                 "url": file_url,
                 "alt": file.filename,

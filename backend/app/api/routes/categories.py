@@ -26,8 +26,6 @@ async def get_categories(
         'name': cat.name,
         'slug': cat.slug,
         'site_domain': cat.site_domain,
-        'created_at': cat.created_at,
-        'updated_at': cat.updated_at
     } for cat in categories]
 
 
@@ -39,7 +37,11 @@ async def create_category(
     current_user: User = Depends(get_current_active_user)
 ):
     # domain = request.state.domain
-    
+
+    # 调试：打印接收到的数据
+    print(f"接收到的栏目数据: {category.model_dump()}")
+    print(f"site_domain 值: {category.site_domain}")
+
     # 检查slug是否已存在
     result = await db.execute(
         select(Category).where(Category.slug == category.slug)
@@ -49,12 +51,13 @@ async def create_category(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Slug already exists"
         )
-    
+
     db_category = Category(
         name=category.name,
         slug=category.slug,
-        site_domain="localhost"
+        site_domain=category.site_domain
     )
+    print(f"创建的 db_category.site_domain: {db_category.site_domain}")
     db.add(db_category)
     await db.commit()
     await db.refresh(db_category)
@@ -63,8 +66,6 @@ async def create_category(
         'name': db_category.name,
         'slug': db_category.slug,
         'site_domain': db_category.site_domain,
-        'created_at': db_category.created_at,
-        'updated_at': db_category.updated_at
     }
 
 
@@ -90,8 +91,6 @@ async def get_category(
         'name': category.name,
         'slug': category.slug,
         'site_domain': category.site_domain,
-        'created_at': category.created_at,
-        'updated_at': category.updated_at
     }
 
 
@@ -136,8 +135,6 @@ async def update_category(
         'name': db_category.name,
         'slug': db_category.slug,
         'site_domain': db_category.site_domain,
-        'created_at': db_category.created_at,
-        'updated_at': db_category.updated_at
     }
 
 

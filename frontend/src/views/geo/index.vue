@@ -17,8 +17,8 @@
         :data="treeData"
         :props="treeProps"
         node-key="id"
-        default-expand-all
         highlight-current
+        accordion
       >
         <template #default="{ node, data }">
           <div class="custom-tree-node">

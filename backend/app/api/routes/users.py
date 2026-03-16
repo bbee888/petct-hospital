@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import List
 from app.db.session import get_db
 from app.api.deps import get_current_active_user
 from app.models.user import User
@@ -9,7 +10,7 @@ from app.core.security import get_password_hash
 
 router = APIRouter()
 
-@router.get("/", response_model=list[UserSchema])
+@router.get("/", response_model=List[UserSchema])
 async def get_users(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)

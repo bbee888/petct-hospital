@@ -72,7 +72,7 @@ async def create_appointment(
     appointment: AppointmentCreate,
     db: AsyncSession = Depends(get_db)
 ):
-    # domain = request.state.domain
+    domain = request.state.domain
     
     result = await db.execute(
         select(Hospital).where(Hospital.id == appointment.hospital_id)
@@ -92,7 +92,7 @@ async def create_appointment(
         sex=appointment.sex,
         appoint_date=appointment.appoint_date,
         intro=appointment.intro,
-        site_domain=domain,
+        site_domain=domain or '',
         status=0
     )
     db.add(db_appointment)

@@ -39,21 +39,21 @@ const routes = [
         name: 'Hospitals',
         component: () => import('../views/hospitals/index.vue')
       },
-      {
-        path: 'hospitals/edit/:id?',
-        name: 'HospitalEdit',
-        component: () => import('../views/hospitals/HospitalEdit.vue')
-      },
+      // {
+      //   path: 'hospitals/edit/:id?',
+      //   name: 'HospitalEdit',
+      //   component: () => import('../views/hospitals/HospitalEdit.vue')
+      // },
       {
         path: 'articles',
         name: 'Articles',
         component: () => import('../views/articles/index.vue')
       },
-      {
-        path: 'articles/edit/:id?',
-        name: 'ArticleEdit',
-        component: () => import('../views/articles/ArticleEdit.vue')
-      },
+      // {
+      //   path: 'articles/edit/:id?',
+      //   name: 'ArticleEdit',
+      //   component: () => import('../views/articles/ArticleEdit.vue')
+      // },
       {
         path: 'appointments',
         name: 'Appointments',

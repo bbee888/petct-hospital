@@ -1,35 +1,36 @@
 from pydantic import BaseModel
 from datetime import datetime
+from typing import Optional
 
 class HospitalBase(BaseModel):
-    name: str
-    level: str | None = None
-    phone: str | None = None
+    title: str
+    province_id: int
     city_id: int
-    seo_keywords: str | None = None
-    seo_description: str | None = None
-    seo_title: str | None = None
-    price: int | None = None
-    device: str | None = None
-    address: str | None = None
-    advantage: str | None = None
-    ks_intro: str | None = None
-    content: str | None = None
-    cover: str | None = None
-    tags: str | None = None
+    level: str
+    seo_title: Optional[str] = None
+    tags: Optional[str] = None
+    seo_description: Optional[str] = None
+    price: Optional[int] = None
+    device: Optional[str] = None
+    address: Optional[str] = None
+    advantage: Optional[str] = None
+    ks_intro: Optional[str] = None
+    content: Optional[str] = None
+    cover: Optional[str] = None
 
 class HospitalCreate(HospitalBase):
     pass
 
 class HospitalUpdate(HospitalBase):
-    is_published: bool | None = None
+    is_published: Optional[bool] = None
 
 class Hospital(HospitalBase):
     id: int
-    site_domain: str
     view_count: int
     is_published: bool
-    published_at: datetime
-    
+    create_at: datetime
+    province_name: Optional[str] = None
+    city_name: Optional[str] = None
+
     class Config:
         from_attributes = True
