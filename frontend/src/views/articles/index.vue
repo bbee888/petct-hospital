@@ -68,7 +68,7 @@
             <el-switch v-model="scope.row.status" @change="handleStatusChange(scope.row)" />
           </template>
         </el-table-column>
-        <el-table-column prop="created_at" label="创建时间" width="180" />
+        <el-table-column prop="published_at" label="创建时间" width="180" />
         <el-table-column label="操作" width="150">
           <template #default="scope">
             <el-button type="primary" size="small" @click="handleEdit(scope.row)">编辑</el-button>
@@ -156,7 +156,7 @@ const fetchArticles = async () => {
 const fetchSites = async () => {
   try {
     const response = await request.get('/v1/sites/')
-    sites.value = response.data || []
+    sites.value = response.data?.items.filter(site => site.status === true) || []
   } catch (error) {
     console.error('获取站点列表失败:', error)
   }

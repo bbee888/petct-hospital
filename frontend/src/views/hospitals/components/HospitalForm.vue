@@ -76,6 +76,9 @@
           <el-form-item label="医院优势">
             <el-input v-model="form.advantage" type="textarea" :rows="3" placeholder="请输入医院优势" />
           </el-form-item>
+          <el-form-item label="是否合作" :required="true">
+            <el-switch v-model="form.is_cooperation" active-value="1" inactive-value="0" />
+          </el-form-item>
         </el-tab-pane>
         
         <!-- 科室介绍 -->

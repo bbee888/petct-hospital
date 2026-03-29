@@ -11,10 +11,12 @@ export const sitesApi = {
    * @returns {Promise} 站点列表
    */
   async getSites(page = 1, size = 10) {
-    const response = await request.get('/v1/sites/')
+    const response = await request.get('/v1/sites/', {
+      params: { page, size }
+    })
     return {
-      data: response.data || [],
-      total: (response.data || []).length
+      data: response.data?.items || [],
+      total: response.data?.total || 0
     }
   },
 

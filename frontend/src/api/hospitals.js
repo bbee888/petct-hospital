@@ -54,11 +54,20 @@ export const hospitalsApi = {
 
   /**
    * 删除医院
-   * @param {number} id - 医院ID
+   * @param {number} id - 医院 ID
    * @returns {Promise} 删除结果
    */
   async deleteHospital(id) {
     const response = await request.delete(`/v1/hospitals/${id}`)
+    return response.data
+  },
+
+  /**
+   * 获取合作医院数量统计
+   * @returns {Promise} 合作医院数量
+   */
+  async getCooperationCount() {
+    const response = await request.get('/v1/stats/hospitals/cooperation')
     return response.data
   }
 }

@@ -17,8 +17,7 @@ router = APIRouter()
 async def get_tag_aggregation(
     slug: str,
     request: Request,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    db: AsyncSession = Depends(get_db)
 ):
     domain = request.state.domain
     

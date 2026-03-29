@@ -10,21 +10,25 @@ SKIP_DOMAIN_CHECK_PATHS = [
     "/docs",
     "/redoc",
     "/openapi.json",
-    "/api/v1/auth/login"
+    "/api/v1/auth/login",
+    "/api/v1/appointments",
+    "/api/v1/hospitals",
+    "/api/v1/articles",
+    "/api/v1/geo"
 ]
 
 async def domain_middleware(request: Request, call_next):
     path = request.url.path
 
+    # 跳过所有API路径的域名检查（让CORS正常工作）
+    if path.startswith("/api/"):
+        response = await call_next(request)
+        return response
+
     # 跳过 OPTIONS 预检请求
     if request.method == "OPTIONS":
         response = await call_next(request)
         return response
-
-    for skip_path in SKIP_DOMAIN_CHECK_PATHS:
-        if path == skip_path or path.startswith(skip_path):
-            response = await call_next(request)
-            return response
 
     host = request.headers.get("host", "")
     if not host:

@@ -13,8 +13,7 @@ router = APIRouter()
 @router.get("/")
 async def get_categories(
     request: Request,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    db: AsyncSession = Depends(get_db)
 ):
     # domain = request.state.domain
     result = await db.execute(

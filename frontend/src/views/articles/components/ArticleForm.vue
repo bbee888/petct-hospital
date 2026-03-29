@@ -212,12 +212,18 @@ const fetchCategories = async () => {
   }
 }
 
-// 获取站点列表
+// 获取站点列表（只获取状态为 1 的站点）
 const fetchSites = async () => {
   try {
-    const response = await request.get('/v1/sites/')
-    sites.value = response.data || []
-    console.log('获取到的所有站点:', sites.value)
+    // 获取所有站点（不分页）
+    const response = await request.get('/v1/sites/', {
+      params: { page: 1, size: 100 }
+    })
+    // 从响应中提取 items 数组，并过滤状态为 1 的站点
+    const allSites = response.data?.items || response.data || []
+    sites.value = allSites.filter(site => site.status === true)
+    console.log('获取到的所有站点:', allSites)
+    console.log('状态为 1 的站点:', sites.value)
   } catch (error) {
     console.error('获取站点列表失败:', error)
   }

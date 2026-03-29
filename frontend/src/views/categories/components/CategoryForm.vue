@@ -82,7 +82,7 @@ const rules = {
 const fetchSites = async () => {
   try {
     const response = await request.get('/v1/sites/')
-    sites.value = response.data || []
+    sites.value = response.data?.items.filter(site => site.status === true) || []
   } catch (error) {
     console.error('获取站点列表失败:', error)
   }

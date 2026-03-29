@@ -24,6 +24,7 @@ class Hospital(Base):
     seo_title = Column(String(100), nullable=True)
     tags = Column(String(100), nullable=True)
     seo_description = Column(String(255), nullable=True)
+    is_cooperation = Column(Integer, default=0)  # 是否合作：0-未合作，1-合作
 
     # 关系
     province = relationship("Province", back_populates="hospitals")

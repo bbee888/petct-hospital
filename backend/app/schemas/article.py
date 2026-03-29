@@ -47,6 +47,8 @@ class Article(ArticleBase):
     view_count: int
     is_published: bool
     published_at: datetime
+    site_domain: Optional[str] = None
+    category_name: Optional[str] = None
 
     class Config:
         from_attributes = True

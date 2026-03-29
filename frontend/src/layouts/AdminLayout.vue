@@ -10,7 +10,7 @@
               <path d="M15 8a3 3 0 1 0-6 0"/>
             </svg>
           </div>
-          <h1 v-show="!sidebarCollapsed" class="logo-title">PET-CT 管理系统</h1>
+          <h1 v-show="!sidebarCollapsed" class="logo-title">后台管理系统</h1>
         </div>
         <button 
           class="sidebar-toggle" 

@@ -135,14 +135,29 @@ async def get_recent_appointments(
         appointments=appointment_list
     )
 
+@router.get("/hospitals/cooperation")
+async def get_cooperation_hospitals_count(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    获取合作医院数量统计
+    """
+    cooperation_result = await db.execute(
+        select(func.count(Hospital.id)).where(Hospital.is_cooperation == 1)
+    )
+    cooperation_count = cooperation_result.scalar() or 0
+    
+    return {'cooperation_count': cooperation_count}
+
 @router.get("/menu-badges")
 async def get_menu_badges(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
     """
-    获取菜单badge统计
-    用于前端菜单显示的badge数字
+    获取菜单 badge 统计
+    用于前端菜单显示的 badge 数字
     """
     # 站点数量
     sites_result = await db.execute(select(func.count(Site.id)))

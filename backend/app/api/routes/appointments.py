@@ -72,7 +72,7 @@ async def create_appointment(
     appointment: AppointmentCreate,
     db: AsyncSession = Depends(get_db)
 ):
-    domain = request.state.domain
+    domain = getattr(request.state, 'domain', None) or 'www.petctw.com'
     
     result = await db.execute(
         select(Hospital).where(Hospital.id == appointment.hospital_id)

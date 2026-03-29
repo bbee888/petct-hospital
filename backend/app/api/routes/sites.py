@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Query
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import List
+from typing import List, Optional
 from app.db.session import get_db
 from app.api.deps import get_current_active_user
 from app.models.user import User
@@ -10,14 +10,27 @@ from app.schemas.site import SiteCreate, SiteUpdate, Site as SiteSchema
 
 router = APIRouter()
 
-@router.get("/", response_model=List[SiteSchema])
+@router.get("/")
 async def get_sites(
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    page: int = Query(1, ge=1, description="页码"),
+    size: int = Query(10, ge=1, le=100, description="每页数量"),
+    db: AsyncSession = Depends(get_db)
 ):
-    result = await db.execute(select(Site))
+    # 获取总数
+    total_result = await db.execute(select(func.count(Site.id)))
+    total = total_result.scalar() or 0
+    
+    # 获取分页数据
+    offset = (page - 1) * size
+    result = await db.execute(select(Site).offset(offset).limit(size))
     sites = result.scalars().all()
-    return sites
+    
+    return {
+        "items": sites,
+        "total": total,
+        "page": page,
+        "size": size
+    }
 
 @router.post("/", response_model=SiteSchema)
 async def create_site(
@@ -44,8 +57,7 @@ async def create_site(
 @router.get("/{site_id}", response_model=SiteSchema)
 async def get_site(
     site_id: int,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    db: AsyncSession = Depends(get_db)
 ):
     result = await db.execute(select(Site).where(Site.id == site_id))
     site = result.scalars().first()

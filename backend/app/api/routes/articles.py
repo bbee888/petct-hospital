@@ -15,8 +15,7 @@ router = APIRouter()
 @router.get("/categories", response_model=List[ArticleCategorySchema])
 async def get_article_categories(
     request: Request,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    db: AsyncSession = Depends(get_db)
 ):
     # domain = request.state.domain
     result = await db.execute(select(ArticleCategory).options(joinedload(ArticleCategory.articles)))
@@ -133,11 +132,10 @@ async def get_articles(
     title: Optional[str] = None,
     site_domain: Optional[str] = None,
     category_id: Optional[int] = None,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    db: AsyncSession = Depends(get_db)
 ):
     # domain = request.state.domain
-    query = select(Article)
+    query = select(Article).options(joinedload(Article.category))
 
     # 添加搜索条件
     if title:
@@ -149,8 +147,19 @@ async def get_articles(
         query = query.where(Article.category_id == category_id)
 
     result = await db.execute(query)
-    articles = result.scalars().all()
-    return articles
+    articles = result.scalars().unique().all()
+
+    # 手动添加 site_domain 和 category_name
+    result_list = []
+    for article in articles:
+        article_dict = {
+            **ArticleSchema.model_validate(article).model_dump(),
+            'site_domain': article.category.site_domain if article.category else None,
+            'category_name': article.category.name if article.category else None
+        }
+        result_list.append(article_dict)
+
+    return result_list
 
 @router.post("/", response_model=ArticleSchema)
 async def create_article(
@@ -190,8 +199,7 @@ async def create_article(
 async def get_article(
     article_id: int,
     request: Request,
-    db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    db: AsyncSession = Depends(get_db)
 ):
     # domain = request.state.domain
     result = await db.execute(
@@ -203,7 +211,21 @@ async def get_article(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Article not found"
         )
-    return article
+
+    # 更新浏览量：增加1-10的随机数
+    import random
+    view_increment = random.randint(1, 10)
+    article.view_count = (article.view_count or 0) + view_increment
+    await db.commit()
+
+    # 添加 site_domain 和 category_name
+    article_dict = {
+        **ArticleSchema.model_validate(article).model_dump(),
+        'site_domain': article.category.site_domain if article.category else None,
+        'category_name': article.category.name if article.category else None
+    }
+
+    return article_dict
 
 @router.put("/{article_id}", response_model=ArticleSchema)
 async def update_article(

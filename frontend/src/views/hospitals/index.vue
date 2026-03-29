@@ -25,20 +25,7 @@
           </svg>
           新增医院
         </el-button>
-        <el-button 
-          type="success" 
-          @click="exportData"
-          class="action-button"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <path d="M16 13H8"/>
-            <path d="M16 17H8"/>
-            <line x1="10" y1="9" x2="8" y2="9"/>
-          </svg>
-          导出数据
-        </el-button>
+        
       </div>
     </div>
 
@@ -48,8 +35,6 @@
         <div class="stat-icon">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/>
-            <line x1="12" y1="16" x2="12" y2="12"/>
-            <line x1="12" y1="8" x2="12.01" y2="8"/>
           </svg>
         </div>
         <div class="stat-content">
@@ -64,8 +49,8 @@
           </svg>
         </div>
         <div class="stat-content">
-          <div class="stat-number">{{ activeHospitals }}</div>
-          <div class="stat-label">活跃医院</div>
+          <div class="stat-number">{{ cooperationHospitals }}</div>
+          <div class="stat-label">合作医院</div>
         </div>
       </div>
       <div class="stat-card stat-warning">
@@ -323,9 +308,26 @@
                   <div class="hospital-info">
                     <div class="hospital-name">
                       <span class="hospital-title">{{ scope.row.title }}</span>
-                      <span class="hospital-level-badge" :class="getLevelClass(scope.row.level)">
-                        {{ scope.row.level || '未分级' }}
-                      </span>
+                      <!-- 医院图片图标 -->
+                      <el-tooltip 
+                        v-if="scope.row.cover" 
+                        placement="top"
+                        :offset="10"
+                        class="hospital-cover-tooltip"
+                      >
+                        <template #content>
+                          <div class="hospital-cover-preview">
+                            <img :src="scope.row.cover" :alt="scope.row.title" />
+                          </div>
+                        </template>
+                        <div class="hospital-cover-icon">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <polyline points="21 15 16 10 5 21"/>
+                          </svg>
+                        </div>
+                      </el-tooltip>
                     </div>
                     <div class="hospital-meta">
                       <span class="meta-item">
@@ -343,15 +345,21 @@
                   </div>
                 </template>
               </el-table-column>
-              
-              <el-table-column label="PET-CT设备" min-width="150">
+                            
+              <!-- 医院等级列 -->
+              <el-table-column label="医院等级" prop="level" width="120" align="center">
+                <template #default="scope">
+                  <span class="hospital-level-badge" :class="getLevelClass(scope.row.level)">
+                    {{ scope.row.level || '未分级' }}
+                  </span>
+                </template>
+              </el-table-column>
+                            
+              <el-table-column label="PET-CT 设备" min-width="150">
                 <template #default="scope">
                   <div class="device-info">
                     <div class="device-type">
                       {{ scope.row.device || '未配置' }}
-                    </div>
-                    <div class="device-advantage" v-if="scope.row.advantage">
-                      {{ scope.row.advantage.slice(0, 20) }}...
                     </div>
                   </div>
                 </template>
@@ -372,7 +380,14 @@
                 </template>
               </el-table-column>
               
-              <el-table-column label="操作" width="160" fixed="right">
+              <el-table-column label="是否合作" prop="is_cooperation" width="100">
+                <template #default="scope">
+                  <el-tag v-if="scope.row.is_cooperation === 1" type="success">合作</el-tag>
+                  <el-tag v-else type="info">未合作</el-tag>
+                </template>
+              </el-table-column>
+              
+              <el-table-column label="操作" width="250" fixed="right">
                 <template #default="scope">
                   <div class="table-actions-buttons">
                     <el-button 
@@ -440,7 +455,7 @@
                 </div>
                 
                 <div class="hospital-price">
-                  <span class="price-label">PET-CT价格:</span>
+                  <span class="price-label">全身价格:</span>
                   <span class="price-value">¥{{ hospital.price || '待定' }}</span>
                 </div>
                 
@@ -450,8 +465,8 @@
                 </div>
                 
                 <div class="hospital-address" v-if="hospital.address">
-                  <span class="address-label">地址:</span>
-                  <span class="address-value">{{ hospital.address.slice(0, 30) }}...</span>
+                  <span class="address-label">地  址:</span>
+                  <span class="address-value">{{ hospital.address.slice(0, 50) }}...</span>
                 </div>
               </div>
               
@@ -533,6 +548,7 @@ const hospitals = ref([])
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
+const cooperationCount = ref(0)
 const searchQuery = ref('')
 const searchProvince = ref('')
 const searchCity = ref('')
@@ -571,8 +587,8 @@ const form = ref({
 })
 
 // 计算属性
-const activeHospitals = computed(() => {
-  return hospitals.value.filter(h => h.status !== 'inactive').length
+const cooperationHospitals = computed(() => {
+  return cooperationCount.value
 })
 
 const avgPrice = computed(() => {
@@ -627,6 +643,9 @@ const fetchHospitals = async () => {
     hospitals.value = response.data?.items || response.data || []
     total.value = response.data?.total || hospitals.value.length
     
+    // 获取合作医院数量
+    fetchCooperationCount()
+    
     // 通知屏幕阅读器
     announceToScreenReader(`找到 ${hospitals.value.length} 家医院`)
     
@@ -643,6 +662,15 @@ const fetchHospitals = async () => {
       message: error.response?.data?.detail || '请检查网络连接后重试',
       duration: 3000
     })
+  }
+}
+
+const fetchCooperationCount = async () => {
+  try {
+    const response = await request.get('/v1/stats/hospitals/cooperation')
+    cooperationCount.value = response.data?.cooperation_count || 0
+  } catch (error) {
+    console.error('获取合作医院数量失败:', error)
   }
 }
 
@@ -769,11 +797,6 @@ const refreshData = () => {
   })
 }
 
-const exportData = () => {
-  announceToScreenReader('导出医院数据功能开发中')
-  ElMessage.info('导出数据功能开发中')
-}
-
 const handleView = (hospital) => {
   announceToScreenReader(`查看医院 ${hospital.title} 的详细信息`)
   ElMessage.info(`查看医院: ${hospital.title}`)
@@ -851,6 +874,7 @@ const setupKeyboardShortcuts = () => {
 onMounted(() => {
   fetchProvinces()
   fetchHospitals()
+  fetchCooperationCount()
   
   const cleanup = setupKeyboardShortcuts()
   return () => cleanup()
@@ -1198,6 +1222,7 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   margin-bottom: 8px;
+  flex-wrap: wrap;
 }
 
 .hospital-title {
@@ -1207,11 +1232,55 @@ onMounted(() => {
 }
 
 .hospital-level-badge {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
-  padding: 2px 6px;
+  padding: 3px 6px;
   border-radius: 3px;
   color: white;
+}
+
+/* 医院图片图标 */
+.hospital-cover-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.hospital-cover-icon:hover {
+  background: linear-gradient(135deg, #E0F2FE 0%, #BAE6FD 100%);
+  transform: scale(1.1);
+}
+
+.hospital-cover-icon svg {
+  width: 14px;
+  height: 14px;
+  stroke: #0891B2;
+}
+
+/* 医院图片预览 */
+.hospital-cover-preview {
+  max-width: 400px;
+  max-height: 300px;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.hospital-cover-preview img {
+  max-width: 100%;
+  max-height: 300px;
+  object-fit: cover;
+  display: block;
+}
+
+.hospital-cover-tooltip {
+  display: inline-block;
 }
 
 .level-top {
@@ -1276,9 +1345,7 @@ onMounted(() => {
 }
 
 .device-type {
-  font-weight: 600;
   color: #164E63;
-  margin-bottom: 4px;
   font-size: 14px;
 }
 
@@ -1446,7 +1513,7 @@ onMounted(() => {
 .device-label,
 .address-label {
   color: #64748B;
-  min-width: 70px;
+  min-width: 50px;
 }
 
 .price-value {
