@@ -103,7 +103,7 @@ async def create_appointment(
         'id': db_appointment.id,
         'site_domain': db_appointment.site_domain,
         'hospital_id': db_appointment.hospital_id,
-        'hospital_name': hospital.name,
+        'hospital_name': hospital.title,
         'username': db_appointment.username,
         'phone': db_appointment.phone,
         'idcard': db_appointment.idcard,

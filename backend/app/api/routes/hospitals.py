@@ -167,6 +167,46 @@ async def update_hospital(
 
     return db_hospital
 
+# 获取同省合作医院
+@router.get("/province/{hospital_id}")
+async def get_province_hospitals(
+    hospital_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    """获取同省的合作医院推荐"""
+    # 先获取当前医院的信息
+    result = await db.execute(
+        select(Hospital).options(
+            joinedload(Hospital.province)
+        ).where(Hospital.id == hospital_id)
+    )
+    current_hospital = result.scalars().first()
+    
+    if not current_hospital or not current_hospital.province_id:
+        return {"items": [], "total": 0}
+    
+    # 获取同省的合作医院（排除当前医院）
+    query = select(Hospital).options(
+        joinedload(Hospital.province),
+        joinedload(Hospital.city)
+    ).where(
+        Hospital.province_id == current_hospital.province_id,
+        Hospital.id != hospital_id,
+        Hospital.is_cooperation == 1
+    ).limit(5)
+    
+    result = await db.execute(query)
+    hospitals = result.scalars().unique().all()
+    
+    result_data = []
+    for h in hospitals:
+        h_dict = HospitalSchema.model_validate(h).model_dump()
+        h_dict['province_name'] = h.province.name if h.province else None
+        h_dict['city_name'] = h.city.name if h.city else None
+        result_data.append(h_dict)
+    
+    return {"items": result_data, "total": len(result_data)}
+
 @router.delete("/{hospital_id}")
 async def delete_hospital(
     hospital_id: int,

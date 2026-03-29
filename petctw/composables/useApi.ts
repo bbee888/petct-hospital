@@ -57,6 +57,11 @@ export const hospitalApi = {
     return request<any>(`/hospitals/${id}`)
   },
   
+  // 获取同省合作医院
+  getProvinceHospitals: async (hospitalId: number) => {
+    return request<{ items: any[], total: number }>(`/hospitals/province/${hospitalId}`)
+  },
+  
   // 获取热门医院（is_cooperation=1）
   getHotList: async (size: number = 6) => {
     return hospitalApi.getList({ page: 1, size, is_cooperation: 0 })

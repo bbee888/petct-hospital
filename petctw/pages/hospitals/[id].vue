@@ -160,6 +160,34 @@
       </svg>
       <p>加载失败，请返回重试</p>
     </div>
+
+    <!-- 同省合作医院推荐 -->
+    <div v-if="provinceHospitals.length > 0" class="mx-4 mt-4 mb-20">
+      <h3 class="text-base font-bold text-gray-800 mb-3">合作医院推荐</h3>
+      <div class="bg-white rounded-xl overflow-hidden card-shadow">
+        <NuxtLink 
+          v-for="h in provinceHospitals" 
+          :key="h.id"
+          :to="`/hospitals/${h.id}`"
+          class="flex items-center p-3 border-b last:border-b-0"
+        >
+          <img 
+            :src="h.cover || 'https://prototype-prod-1254106194.cos.ap-beijing.myqcloud.com/prototype/default.jpg'" 
+            class="w-16 h-16 rounded-lg object-cover"
+          />
+          <div class="ml-3 flex-1">
+            <h4 class="text-sm font-medium text-gray-800">{{ h.title }}</h4>
+            <p class="text-xs text-gray-500 mt-1">{{ h.province_name }} - {{ h.city_name }}</p>
+            <div class="flex items-center gap-2 mt-1">
+              <span v-if="h.level" class="px-2 py-0.5 bg-blue-50 text-primary text-xs rounded">{{ h.level }}</span>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/>
+          </svg>
+        </NuxtLink>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -170,6 +198,7 @@ const { hospitalApi } = await import('~/composables/useApi')
 
 const loading = ref(true)
 const hospital = ref<any>(null)
+const provinceHospitals = ref<any[]>([])
 const activeTab = ref('医院介绍')
 const tabs = ['医院介绍', '科室介绍', '预约须知']
 
@@ -181,6 +210,12 @@ async function loadHospital() {
   try {
     loading.value = true
     hospital.value = await hospitalApi.getDetail(hospitalId)
+    
+    // 加载同省合作医院
+    if (hospital.value?.province_id) {
+      const res = await hospitalApi.getProvinceHospitals(hospitalId)
+      provinceHospitals.value = res.items || []
+    }
   } catch (error) {
     console.error('加载医院详情失败:', error)
     hospital.value = null
