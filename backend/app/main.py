@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -5,6 +6,14 @@ from app.middleware.domain_middleware import domain_middleware
 from app.db.base import Base
 from app.db.session import engine
 import os
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 启动时初始化数据库
+    await init_db()
+    yield
+    # 关闭时清理资源（如需要）
 
 # 导入路由
 from app.api.routes import auth, sites, hospitals, articles, appointments, tags, users, geo, categories, upload, stats
@@ -17,7 +26,8 @@ async def init_db():
 app = FastAPI(
     title="Hospital CMS API",
     description="多站点医院内容管理系统 API",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # 配置 CORS - 必须在中间件之前
@@ -55,9 +65,6 @@ app.include_router(geo.router, prefix="/api/v1/geo", tags=["geo"])
 app.include_router(upload.router, prefix="/api/v1/upload", tags=["upload"])
 app.include_router(stats.router, prefix="/api/v1/stats", tags=["stats"])
 
-@app.on_event("startup")
-async def startup_event():
-    await init_db()
 
 @app.get("/")
 async def root():
